@@ -10,17 +10,15 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class PrivateMessage implements ShouldBroadcast
+class GroupChatMessage implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    private $message;
     /**
      * Create a new event instance.
      */
-
-    public $message;
-
-    public function __construct(String $message)
+    public function __construct($message)
     {
         $this->message = $message;
     }
@@ -33,7 +31,7 @@ class PrivateMessage implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('messenger.1'),
+            new PresenceChannel('group-chat.'. $this->message->group_id)
         ];
     }
 }

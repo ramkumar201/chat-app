@@ -23,8 +23,10 @@ createInertiaApp({
     },
 });
 
-
-Echo.private('messenger')
+window.Echo.private(`messenger.1`)
+    .subscribed(() => {
+        console.log('You are subscribed..!');
+    })
     .listen('PrivateMessage', (e) => {
         console.log('----- Message -----', e);
     });
