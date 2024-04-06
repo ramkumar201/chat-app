@@ -15,6 +15,10 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            inset: {
+                '28px': '28px',
+                '20px': '20px'
+            }
         },
     },
 

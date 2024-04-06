@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import Helper from '@/Helper/Helper'
 
 export default {
-    component: {
+    components: {
         AuthenticatedLayout,
         Head,
         Link,
