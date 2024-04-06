@@ -18,11 +18,11 @@ class PrivateMessage implements ShouldBroadcast
      * Create a new event instance.
      */
 
-    public $message;
+    public $chatMessage;
 
-    public function __construct(String $message)
+    public function __construct($message)
     {
-        $this->message = $message;
+        $this->chatMessage = $message;
     }
 
     /**
@@ -33,7 +33,12 @@ class PrivateMessage implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('messenger.1'),
+            new PrivateChannel('chat.'. $this->chatMessage->id),
         ];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'private.chat';
     }
 }
