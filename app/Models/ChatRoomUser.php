@@ -9,6 +9,8 @@ class ChatRoomUser extends Model
 {
     use HasFactory;
 
+    protected $table = 'chat_room_user';
+
     protected $fillable = [
         'char_room_id',
         'user_id',

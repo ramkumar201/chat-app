@@ -35,6 +35,9 @@
                                     "
                                 ></div>
                             </div>
+                            <p v-if="uploadnewPic" class="text-xs">
+                                save your pic to clicking save button
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -50,7 +53,6 @@
                             class="mt-1 block w-full"
                             v-model="form.name"
                             required
-                            autofocus
                             autocomplete="name"
                         />
 
@@ -86,14 +88,24 @@
                             type="text"
                             class="mt-1 block w-full"
                             v-model="form.phoneno"
-                            required
-                            autocomplete="phoneno"
                         />
 
                         <InputError
                             class="mt-2"
                             :message="form.errors.phoneno"
                         />
+                    </div>
+                    <div class="m-2">
+                        <InputLabel for="state" value="State" />
+
+                        <TextInput
+                            id="state"
+                            type="text"
+                            class="mt-1 block w-full"
+                            v-model="form.state"
+                        />
+
+                        <InputError class="mt-2" :message="form.errors.city" />
                     </div>
                 </div>
 
@@ -107,8 +119,6 @@
                             type="text"
                             class="mt-1 block w-full"
                             v-model="form.address"
-                            required
-                            autocomplete="address"
                         />
 
                         <InputError
@@ -124,8 +134,20 @@
                             type="text"
                             class="mt-1 block w-full"
                             v-model="form.city"
-                            required
-                            autocomplete="city"
+                        />
+
+                        <InputError class="mt-2" :message="form.errors.city" />
+                    </div>
+                    <div class="m-2">
+                        <InputLabel for="country" value="Country" />
+
+                        <SingleSelect
+                            :key="form.country"
+                            v-model="form.country"
+                            placeholder="Select Country"
+                            class="w-full mt-2"
+                            :options="countryData"
+                            @getValue="getCountryDataFunc($event)"
                         />
 
                         <InputError class="mt-2" :message="form.errors.city" />
@@ -178,14 +200,16 @@
 <script>
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
+import SingleSelect from "@/Components/SingleSelect.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import TextInput from "@/Components/TextInput.vue";
 import TextArea from "@/Components/TextArea.vue";
 import MobileNumber from "@/Components/MobileNumber.vue";
 import { Link, usePage } from "@inertiajs/vue3";
+import { countries } from 'countries-list'
+import { getCountryData, getEmojiFlag } from 'countries-list';
 
 export default {
-
     components: {
         InputError,
         InputLabel,
@@ -193,7 +217,8 @@ export default {
         TextInput,
         TextArea,
         MobileNumber,
-        Link
+        Link,
+        SingleSelect,
     },
 
     props: {
@@ -210,41 +235,60 @@ export default {
                 name: this.$page.props.auth.user.name,
                 email: this.$page.props.auth.user.email,
                 photo: this.$page.props.auth.user?.photo ?? [],
-                phone: this.$page.props.auth.user?.phoneno ?? '',
-                address: this.$page.props.auth.user?.address ?? '',
-                city: this.$page.props.auth.user?.city ?? '',
-            })
-        }
+                phoneno: this.$page.props.auth.userInfo?.phoneno ?? "",
+                address: this.$page.props.auth.userInfo?.address ?? "",
+                city: this.$page.props.auth.userInfo?.city ?? "",
+                state: this.$page.props.auth.userInfo?.state ?? "",
+                country: this.$page.props.auth.userInfo?.country ?? "",
+            }),
+            uploadnewPic: false,
+            countryData: [],
+        };
+    },
+
+    mounted() {
+        this.countryData = Object.keys(countries).map((data) => {
+            let obj = {};
+            obj.label = countries[data].name
+            obj.value = data
+            return obj;
+        })
     },
 
     methods: {
         readURL(input) {
-            let file = input.target.files
+            let file = input.target.files;
             this.form.photo = file;
             if (file && file[0]) {
                 let reader = new FileReader();
-                reader.onload = function(e) {
-                    let imagePreview = document.getElementById('imagePreview');
-                    imagePreview.style.backgroundImage = 'url(' + e.target.result + ')';
+                reader.onload = function (e) {
+                    let imagePreview = document.getElementById("imagePreview");
+                    imagePreview.style.backgroundImage = "url(" + e.target.result + ")";
 
-                    imagePreview.style.display = 'none';
+                    imagePreview.style.display = "none";
 
-                    setTimeout(function() {
-                        imagePreview.style.display = 'block';
+                    setTimeout(function () {
+                        imagePreview.style.display = "block";
                         imagePreview.style.opacity = 0;
-                        let fadeInInterval = setInterval(function() {
+                        let fadeInInterval = setInterval(function () {
                             imagePreview.style.opacity = parseFloat(imagePreview.style.opacity) + 0.05;
                             if (parseFloat(imagePreview.style.opacity) >= 1) {
                                 clearInterval(fadeInInterval);
                             }
                         }, 13);
                     }, 0);
-                }
+                };
                 reader.readAsDataURL(file[0]);
+                this.uploadnewPic = true;
             }
+        },
+
+        getCountryDataFunc(con) {
+            let data = getCountryData(con);
+            console.log(data);
         }
     },
-}
+};
 </script>
 
 <style>

@@ -9,6 +9,8 @@ class UserInfo extends Model
 {
     use HasFactory;
 
+    protected $table = 'userinfo';
+
     protected $fillable = [
         'user_id',
         'bio',
