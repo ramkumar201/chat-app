@@ -1,5 +1,6 @@
 <template>
     <section>
+        <loading v-model:active="isLoading" :loader="'dots'" />
         <header>
             <h2 class="text-lg font-medium text-gray-900">
                 Profile Information
@@ -10,10 +11,7 @@
             </p>
         </header>
 
-        <form
-            @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
-        >
+        <form @submit.prevent="submitForm" class="mt-6 space-y-6">
             <div class="grid grid-cols-3 gap-4">
                 <div>
                     <div class="container">
@@ -25,15 +23,10 @@
                                     accept=".png, .jpg, .jpeg"
                                     @change="readURL($event)"
                                 />
-                                <label for="imageUpload"></label>
+                                <label for="imageUpload"><i></i></label>
                             </div>
                             <div class="avatar-preview">
-                                <div
-                                    id="imagePreview"
-                                    style="
-                                        background-image: url(http://i.pravatar.cc/500?img=7);
-                                    "
-                                ></div>
+                                <div id="imagePreview"></div>
                             </div>
                             <p v-if="uploadnewPic" class="text-xs">
                                 save your pic to clicking save button
@@ -155,43 +148,8 @@
                 </div>
             </div>
 
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="text-sm mt-2 text-gray-800">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                        Click here to re-send the verification email.
-                    </Link>
-                </p>
-
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 font-medium text-sm text-green-600"
-                >
-                    A new verification link has been sent to your email address.
-                </div>
-            </div>
-
             <div class="flex items-center gap-4">
                 <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
-
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
-                >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
-                    >
-                        Saved.
-                    </p>
-                </Transition>
             </div>
         </form>
     </section>
@@ -206,8 +164,11 @@ import TextInput from "@/Components/TextInput.vue";
 import TextArea from "@/Components/TextArea.vue";
 import MobileNumber from "@/Components/MobileNumber.vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import { countries } from 'countries-list'
-import { getCountryData, getEmojiFlag } from 'countries-list';
+import { countries, getCountryData } from "countries-list";
+import { toast } from "vue3-toastify";
+import "vue3-toastify/dist/index.css";
+import Loading from "vue-loading-overlay";
+import "vue-loading-overlay/dist/css/index.css";
 
 export default {
     components: {
@@ -219,6 +180,7 @@ export default {
         MobileNumber,
         Link,
         SingleSelect,
+        Loading,
     },
 
     props: {
@@ -243,27 +205,32 @@ export default {
             }),
             uploadnewPic: false,
             countryData: [],
+            isLoading: false,
         };
     },
 
     mounted() {
+        let imagePreview = document.getElementById("imagePreview");
+        imagePreview.style.backgroundImage = "url(" + this.form.photo + ")";
         this.countryData = Object.keys(countries).map((data) => {
             let obj = {};
-            obj.label = countries[data].name
-            obj.value = data
+            obj.label = countries[data].name;
+            obj.value = data;
             return obj;
-        })
+        });
     },
 
     methods: {
         readURL(input) {
             let file = input.target.files;
-            this.form.photo = file;
+            this.form.photo = file[0];
+            console.log(this.form.photo);
             if (file && file[0]) {
                 let reader = new FileReader();
                 reader.onload = function (e) {
                     let imagePreview = document.getElementById("imagePreview");
-                    imagePreview.style.backgroundImage = "url(" + e.target.result + ")";
+                    imagePreview.style.backgroundImage =
+                        "url(" + e.target.result + ")";
 
                     imagePreview.style.display = "none";
 
@@ -271,7 +238,8 @@ export default {
                         imagePreview.style.display = "block";
                         imagePreview.style.opacity = 0;
                         let fadeInInterval = setInterval(function () {
-                            imagePreview.style.opacity = parseFloat(imagePreview.style.opacity) + 0.05;
+                            imagePreview.style.opacity =
+                                parseFloat(imagePreview.style.opacity) + 0.05;
                             if (parseFloat(imagePreview.style.opacity) >= 1) {
                                 clearInterval(fadeInInterval);
                             }
@@ -286,7 +254,29 @@ export default {
         getCountryDataFunc(con) {
             let data = getCountryData(con);
             console.log(data);
-        }
+        },
+
+        submitForm() {
+            this.isLoading = true;
+            const formData = new FormData();
+            formData.append("name", this.form.name);
+            formData.append("email", this.form.email);
+            formData.append("photo", this.form.photo);
+            formData.append("address", this.form.address);
+            formData.append("city", this.form.city);
+            formData.append("country", this.form.country);
+            formData.append("state", this.form.state);
+            formData.append("phoneno", this.form.phoneno);
+            axios.post(this.route("profile.update"), formData).then((res) => {
+                console.log("rerer - ", res);
+                this.isLoading = false;
+                toast(res.data.message, {
+                    theme: "dark",
+                    type: res.data.status == 200 ? "success" : "error",
+                    dangerouslyHTMLString: true,
+                });
+            });
+        },
     },
 };
 </script>
